@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for better readability */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0FFFF; /* Azure */
+        }
+
+        /* Custom scrollbar for text areas */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e0f2f7; /* Light Azure for track */
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #007BFF; /* Blue for thumb */
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #0056b3; /* Darker blue on hover */
+        }
+
+        /* Specific styling for the passage display area */
+        #passage-display {
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            font-size: 1.125rem; /* Equivalent to text-lg */
+        }
+
+        /* Style for correct text */
+        .correct {
+            color: #28A745; /* Green */
+        }
+
+        /* Style for incorrect text */
+        .incorrect {
+            color: #DC143C; /* Crimson */
+            background-color: #ffe0e0; /* Light red background for errors */
+            border-radius: 2px;
+            text-decoration: underline;
+        }
+
+        /* Style for current character */
+        .current {
+            background-color: rgba(0, 123, 255, 0.2); /* Light blue highlight */
+            border-radius: 4px;
+            padding: 0 1px;
+        }
+
+        /* Unique button styling */
+        .btn-primary {
+            background-color: #007BFF; /* Blue */
+            color: #FFFFFF; /* White */
+            padding: 1rem 2.5rem;
+            border-radius: 0.75rem; /* Rounded corners */
+            font-weight: 600; /* Semi-bold */
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2), 0 1px 3px rgba(0, 123, 255, 0.1);
+            border: 2px solid #0056b3;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            box-shadow: 0 6px 8px rgba(0, 123, 255, 0.3), 0 3px 5px rgba(0, 123, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 3px rgba(0, 123, 255, 0.1), 0 1px 2px rgba(0, 123, 255, 0.05);
+        }
+
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #6c757d; /* Greyed out for disabled */
+            border-color: #5a6268;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+
+    <div class="bg-white p-6 sm:p-8 md:p-10 rounded-2xl shadow-xl max-w-4xl w-full mx-auto border-4 border-solid border-[#36454F] relative overflow-hidden">
+        <!-- Decorative element for unique UI -->
+        <div class="absolute inset-x-0 top-0 h-4 bg-[#007BFF] rounded-t-xl opacity-80"></div>
+        <div class="absolute inset-x-0 bottom-0 h-4 bg-[#007BFF] rounded-b-xl opacity-80"></div>
+
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-center mb-6 text-[#36454F]">Typing Speed Test</h1>
+
+        <!-- Passage Display Area -->
+        <div id="passage-container" class="relative mb-6">
+            <div id="passage-display" class="bg-gray-50 text-gray-800 p-5 rounded-lg border-2 border-dashed border-gray-300 min-h-[120px] max-h-[250px] overflow-y-auto custom-scrollbar shadow-inner">
+                <!-- Passage will be loaded here -->
+            </div>
+            <!-- Overlay for when test is not active -->
+            <div id="overlay" class="absolute inset-0 bg-white bg-opacity-95 flex items-center justify-center rounded-lg text-xl font-bold text-gray-700 pointer-events-none">
+                Click Start to begin!
+            </div>
+        </div>
+
+
+        <!-- Input Text Area -->
+        <textarea
+            id="text-input"
+            class="w-[90%] mx-auto block p-4 text-lg border-2 border-[#36454F] rounded-lg focus:outline-none focus:ring-4 focus:ring-[#007BFF] focus:border-transparent transition duration-200 resize-none h-32 custom-scrollbar disabled:bg-gray-100 disabled:text-gray-500"
+            placeholder="Start typing here..."
+            disabled
+            autofocus
+            spellcheck="false"
+        ></textarea>
+
+        <!-- Results Display -->
+        <div class="flex flex-wrap justify-around items-center my-6 gap-4">
+            <div class="flex flex-col items-center bg-gray-100 p-4 rounded-xl shadow-md border border-gray-200 w-full sm:w-auto flex-grow">
+                <span class="text-gray-600 text-sm sm:text-base font-semibold">WPM</span>
+                <span id="wpm" class="text-4xl sm:text-5xl font-bold text-[#007BFF] mt-1">0</span>
+            </div>
+            <div class="flex flex-col items-center bg-gray-100 p-4 rounded-xl shadow-md border border-gray-200 w-full sm:w-auto flex-grow">
+                <span class="text-gray-600 text-sm sm:text-base font-semibold">Accuracy</span>
+                <span id="accuracy" class="text-4xl sm:text-5xl font-bold text-[#007BFF] mt-1">0%</span>
+            </div>
+            <div class="flex flex-col items-center bg-gray-100 p-4 rounded-xl shadow-md border border-gray-200 w-full sm:w-auto flex-grow">
+                <span class="text-gray-600 text-sm sm:text-base font-semibold">Time</span>
+                <span id="timer" class="text-4xl sm:text-5xl font-bold text-[#007BFF] mt-1">0s</span>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
+            <button id="start-btn" class="btn-primary w-full sm:w-auto">Start Test</button>
+            <button id="reset-btn" class="btn-primary w-full sm:w-auto">Reset Test</button>
+        </div>
+    </div>
+
+    <script>
+        const passages = [
+            "The quick brown fox jumps over the lazy dog. This sentence is a pangram, containing every letter of the alphabet. It is often used for typing practice or to test display fonts. Regular practice improves typing speed and accuracy significantly.",
+            "In a world where digital communication is paramount, typing proficiency is a valuable skill. Being able to express thoughts quickly and accurately on a keyboard enhances productivity and efficiency in various professional and personal contexts.",
+            "Technology has revolutionized the way we interact with information. From complex software development to simple email exchanges, typing remains a fundamental interface. Mastering this skill can open doors to new opportunities.",
+            "Learning to type without looking at the keyboard, known2 as touch typing, is a highly beneficial technique. It allows for faster data entry and reduces strain on the eyes. Consistent drills are key to achieving fluency.",
+            "The early bird catches the worm, but the second mouse gets the cheese. This old adage highlights the importance of timing and strategy. While being first can be advantageous, careful observation often leads to better outcomes.",
+            "Artificial intelligence is rapidly advancing, transforming industries and daily lives. Machine learning algorithms enable systems to learn from data, perform tasks, and even generate creative content. The future promises even more integration.",
+            "The greatest glory in living lies not in never falling, but in rising every time we fall. This inspiring quote emphasizes resilience and perseverance. Challenges are inevitable, but our response to them defines our character and potential.",
+            "The sun always shines brightest after the rain. Metaphorically, this suggests that difficult times eventually give way to better ones. It encourages optimism and hope, reminding us that adversity is often temporary.",
+            "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment. Authenticity is a powerful virtue, allowing individuals to live in alignment with their true values and beliefs.",
+            "The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. This advice encourages passion and dedication in one's pursuits, leading to fulfilling and impactful contributions."
+        ];
+
+        const passageDisplay = document.getElementById('passage-display');
+        const textInput = document.getElementById('text-input');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const wpmSpan = document.getElementById('wpm');
+        const accuracySpan = document.getElementById('accuracy');
+        const timerSpan = document.getElementById('timer');
+        const overlay = document.getElementById('overlay');
+
+        let currentPassage = '';
+        let timer = null;
+        let startTime = 0;
+        let typedCharacters = 0;
+        let correctCharacters = 0;
+        let currentCharIndex = 0;
+        let isTestRunning = false;
+
+        /**
+         * Loads a random passage from the passages array and displays it.
+         * Initializes the display with styled characters.
+         */
+        function loadPassage() {
+            const randomIndex = Math.floor(Math.random() * passages.length);
+            currentPassage = passages[randomIndex];
+            passageDisplay.innerHTML = ''; // Clear previous passage
+
+            // Create spans for each character to enable individual styling
+            currentPassage.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.classList.add('char');
+                if (index === 0) {
+                    span.classList.add('current'); // Highlight the first character to type
+                }
+                passageDisplay.appendChild(span);
+            });
+
+            // Reset input and results
+            textInput.value = '';
+            wpmSpan.textContent = '0';
+            accuracySpan.textContent = '0%';
+            timerSpan.textContent = '0s';
+            textInput.disabled = true;
+            startBtn.disabled = false;
+            overlay.style.display = 'flex'; // Show overlay
+        }
+
+        /**
+         * Starts the typing test: enables input, starts timer, hides overlay.
+         */
+        function startTest() {
+            if (isTestRunning) return; // Prevent starting multiple times
+            isTestRunning = true;
+            textInput.disabled = false;
+            textInput.focus();
+            startBtn.disabled = true;
+            overlay.style.display = 'none'; // Hide overlay
+
+            startTime = new Date().getTime();
+            timer = setInterval(() => {
+                const currentTime = new Date().getTime();
+                const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+                timerSpan.textContent = `${elapsedTime}s`;
+            }, 1000);
+        }
+
+        /**
+         * Compares user input with the passage and updates character styling.
+         * Calculates WPM and accuracy in real-time.
+         * Ends the test if all characters are typed.
+         */
+        function checkInput() {
+            if (!isTestRunning) return;
+
+            const typedText = textInput.value;
+            const passageChars = passageDisplay.querySelectorAll('.char');
+
+            typedCharacters = typedText.length;
+            correctCharacters = 0;
+
+            // Remove 'current' class from all characters
+            passageChars.forEach(span => span.classList.remove('current'));
+
+            // Iterate through typed characters and apply styling
+            for (let i = 0; i < passageChars.length; i++) {
+                const passageChar = currentPassage[i];
+                const typedChar = typedText[i];
+                const charSpan = passageChars[i];
+
+                if (typedChar == null) { // Character not yet typed
+                    charSpan.classList.remove('correct', 'incorrect');
+                    // Highlight the current character to type
+                    if (i === typedText.length) {
+                        charSpan.classList.add('current');
+                    }
+                } else if (typedChar === passageChar) { // Correct character
+                    charSpan.classList.add('correct');
+                    charSpan.classList.remove('incorrect');
+                    correctCharacters++;
+                } else { // Incorrect character
+                    charSpan.classList.add('incorrect');
+                    charSpan.classList.remove('correct');
+                }
+            }
+
+            // Update currentCharIndex for highlighting the next character
+            currentCharIndex = typedText.length;
+            if (passageChars[currentCharIndex]) {
+                passageChars[currentCharIndex].classList.add('current');
+            }
+
+
+            calculateResults();
+
+            // End test if all characters are typed
+            if (typedCharacters === currentPassage.length) {
+                endTest();
+            }
+        }
+
+        /**
+         * Calculates and updates WPM and accuracy.
+         * WPM: (Correct Characters / 5) / (Elapsed Time in Minutes)
+         * Accuracy: (Correct Characters / Total Typed Characters) * 100
+         */
+        function calculateResults() {
+            const currentTime = new Date().getTime();
+            const elapsedTimeInSeconds = (currentTime - startTime) / 1000;
+            const elapsedTimeInMinutes = elapsedTimeInSeconds / 60;
+
+            let wpm = 0;
+            if (elapsedTimeInMinutes > 0) {
+                // WPM is calculated based on correct words (5 chars per word)
+                wpm = Math.round((correctCharacters / 5) / elapsedTimeInMinutes);
+            }
+            wpmSpan.textContent = wpm;
+
+            let accuracy = 0;
+            if (typedCharacters > 0) {
+                accuracy = Math.round((correctCharacters / typedCharacters) * 100);
+            }
+            accuracySpan.textContent = `${accuracy}%`;
+        }
+
+        /**
+         * Ends the test: stops timer, disables input, displays final results.
+         */
+        function endTest() {
+            isTestRunning = false;
+            clearInterval(timer);
+            textInput.disabled = true;
+            calculateResults(); // Final calculation
+            // Remove 'current' highlight at the end of the test
+            passageDisplay.querySelectorAll('.char').forEach(span => span.classList.remove('current'));
+        }
+
+        /**
+         * Resets the test to its initial state.
+         */
+        function resetTest() {
+            endTest(); // Stop any running test
+            typedCharacters = 0;
+            correctCharacters = 0;
+            currentCharIndex = 0;
+            loadPassage(); // Load a new random passage
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', startTest);
+        resetBtn.addEventListener('click', resetTest);
+        textInput.addEventListener('input', checkInput);
+
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', loadPassage);
+    </script>
+</body>
+</html>
